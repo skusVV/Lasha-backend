@@ -1,15 +1,16 @@
-const { readCars, readUsers, writeUser, modifyUsers } = require('../helpers');
+const { uuid, readUsers } = require('../helpers');
+const Users = require('../models/User');
 
 const usersRouter = (app) => {
-  app.get("/api/users", (req, res) => {
-    const users = readUsers();
+  app.get("/api/users", async (req, res) => {
+    const users = await Users.find({ });
 
     return res.send(users);
   });
 
-  app.post("/api/users", (req, res) => {
+  app.post("/api/users", async (req, res) => {
     const { body } = req;
-    const users = readUsers();
+    const users = await Users.find({ });
 
     const alreadyExist = users.find(
       (item) => item.personGmail === body.personGmail
@@ -19,27 +20,28 @@ const usersRouter = (app) => {
       return res.status(404).end();
     }
     // It should also have a validation.
-    const user = {
-      id: users.length + 1,
+    const user = new Users({
+      id: uuid(),
       personName: body.personName,
       personSurname: body.personSurname,
       personPhone: body.personPhone,
       personGmail: body.personGmail,
       personPassword: body.personPassword,
-      role: body.role, //TODO It is not ok to save ppassword un-encrypted
-    };
+      role: 'User', //TODO It is not ok to save ppassword un-encrypted
+    });
+    await user.save();
     // WE should check if there is such user or not.
-    writeUser(user);
+    // writeUser(user);
 
     return res.send(user);
   });
 
-  app.post("/api/login", (req, res) => {
+  app.post("/api/login", async (req, res) => {
     const { body } = req;
-    const users = readUsers();
+    const users = await Users.find({ });
     const user = users.find((item) => item.personGmail === body.email);
 
-    if (user.personPassword !== body.password) {
+    if (!user || user.personPassword !== body.password) {
       return res.send({ isLogged: false });
     }
 
@@ -54,53 +56,53 @@ const usersRouter = (app) => {
       favorites: user.favorites
     });
   });
-
-  app.get("/api/adminPanel", (req, res) => {
-    const { role } = req.query;
-    if (!role || role !== "Admin") {
-      return res.status(403).send("Unauthorized");
-    }
-    console.log("Hello Admin");
-    res.send("Admin panel accessed successfully");
-  });
-
-  app.post('/api/favorite', (req, res) => {
-    const { userId, carId } = req.body;
-    const users = readUsers();
-    const user = users.find(user => user.id === Number(userId));
-
-    const isAlreadyExists = user.favorites.some(item => item === Number(carId))
-
-    if(isAlreadyExists) {
-      user.favorites = user.favorites.filter(item => item !== Number(carId))
-    } else {
-      user.favorites.push(Number(carId));
-    }
-    const newUsers = users.map(item => {
-      if(item.id === Number(userId)) {
-        return user;
-      } else {
-        return item;
-      }
-    })
-    modifyUsers(newUsers)
-    res.send(user);
-  })
-
-  app.get('/api/user/favorites', (req, res) => {
-    const { userId } = req.query;
-    const users = readUsers();
-    const user = users.find(item => item.id === Number(userId));
-
-    if(user.favorites.length === 0){
-      return res.send([]);
-    }
-
-    const cars = readCars();
-    const userCars = cars.filter(car => user.favorites.includes(car.id))
-
-    return res.send(userCars);
-  })
+  //
+  // app.get("/api/adminPanel", (req, res) => {
+  //   const { role } = req.query;
+  //   if (!role || role !== "Admin") {
+  //     return res.status(403).send("Unauthorized");
+  //   }
+  //   console.log("Hello Admin");
+  //   res.send("Admin panel accessed successfully");
+  // });
+  //
+  // app.post('/api/favorite', (req, res) => {
+  //   const { userId, carId } = req.body;
+  //   const users = readUsers();
+  //   const user = users.find(user => user.id === Number(userId));
+  //
+  //   const isAlreadyExists = user.favorites.some(item => item === Number(carId))
+  //
+  //   if(isAlreadyExists) {
+  //     user.favorites = user.favorites.filter(item => item !== Number(carId))
+  //   } else {
+  //     user.favorites.push(Number(carId));
+  //   }
+  //   const newUsers = users.map(item => {
+  //     if(item.id === Number(userId)) {
+  //       return user;
+  //     } else {
+  //       return item;
+  //     }
+  //   })
+  //   modifyUsers(newUsers)
+  //   res.send(user);
+  // })
+  //
+  // app.get('/api/user/favorites', (req, res) => {
+  //   const { userId } = req.query;
+  //   const users = readUsers();
+  //   const user = users.find(item => item.id === Number(userId));
+  //
+  //   if(user.favorites.length === 0){
+  //     return res.send([]);
+  //   }
+  //
+  //   const cars = readCars();
+  //   const userCars = cars.filter(car => user.favorites.includes(car.id))
+  //
+  //   return res.send(userCars);
+  // })
 };
 
 module.exports = { usersRouter, readUsers };
