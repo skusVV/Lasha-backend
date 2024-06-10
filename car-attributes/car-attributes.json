@@ -1,0 +1,41 @@
+{
+  "engine-capacity": [
+    { "id": 1, "name": "Any", "selected": true },
+    { "id": 2, "name": "1.0", "selected": false },
+    { "id": 3, "name": "1.5", "selected": false },
+    { "id": 4, "name": "2.0", "selected": false },
+    { "id": 5, "name": "3.0", "selected": false },
+    { "id": 6, "name": "10.0", "selected": false }
+  ],
+  "locations": [
+    { "id": 1, "name": "Anywhere", "selected": true },
+    { "id": 2, "name": "Tbilisi", "selected": false },
+    { "id": 3, "name": "Kyiv", "selected": false }
+  ],
+  "manufacturer": [
+    { "id": 0, "name": "---", "selected": true },
+    { "id": 3, "name": "Toyota", "selected": false },
+    { "id": 2, "name": "Ford", "selected": false },
+    { "id": 3, "name": "BMW", "selected": false },
+    { "id": 4, "name": "Honda", "selected": false },
+    { "id": 5, "name": "Mercedes", "selected": false }
+  ],
+  "carModel": [
+    { "id": 0, "name": "---", "selected": true },
+    { "id": 1, "name": "X6", "madeByKey": "BMW", "selected": false },
+    { "id": 2, "name": "X7", "madeByKey": "BMW", "selected": false },
+    { "id": 3, "name": "435", "madeByKey": "BMW", "selected": false },
+    { "id": 4, "name": "M2", "madeByKey": "BMW", "selected": false },
+    { "id": 5, "name": "M3", "madeByKey": "BMW", "selected": false },
+    { "id": 7, "name": "M4", "madeByKey": "BMW", "selected": false },
+    { "id": 8, "name": "M5", "madeByKey": "BMW", "selected": false },
+    { "id": 9, "name": "Prius", "madeByKey": "Toyota", "selected": false },
+    { "id": 10, "name": "Corola", "madeByKey": "Toyota", "selected": false },
+    { "id": 11, "name": "RAV 4", "madeByKey": "Toyota", "selected": false },
+    { "id": 12, "name": "Fit", "madeByKey": "Honda", "selected": false },
+    { "id": 13, "name": "Civic", "madeByKey": "Honda", "selected": false },
+    { "id": 14, "name": "Type R", "madeByKey": "Honda", "selected": false },
+    { "id": 15, "name": "GTI", "madeByKey": "Volkswagen", "selected": false },
+    { "id": 16, "name": "GTI", "madeByKey": "Volkswagen", "selected": false }
+  ]
+}
