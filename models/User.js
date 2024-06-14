@@ -8,7 +8,7 @@ const userSchema = new mongoose.Schema({
     personGmail: { type: String, required: true  },
     personPassword: { type: String, required: true },
     role:  { type: String, required: true },
-    favorites: [ Number ]
+    favorites: [ String ]
 });
 
 module.exports = mongoose.model('Users', userSchema);
