@@ -1,5 +1,6 @@
 const { uuid, readUsers } = require("../helpers");
 const Users = require("../models/User");
+const Cars = require("../models/Car");
 
 const usersRouter = (app) => {
   app.get("/api/users", async (req, res) => {
@@ -10,11 +11,7 @@ const usersRouter = (app) => {
 
   app.post("/api/users", async (req, res) => {
     const { body } = req;
-    const users = await Users.find({});
-
-    const alreadyExist = users.find(
-      (item) => item.personGmail === body.personGmail
-    );
+    const alreadyExist = await Users.findOne({ personGmail: body.personGmail });
 
     if (alreadyExist) {
       return res.status(404).end();
@@ -30,16 +27,13 @@ const usersRouter = (app) => {
       role: "User", //TODO It is not ok to save ppassword un-encrypted
     });
     await user.save();
-    // WE should check if there is such user or not.
-    // writeUser(user);
 
     return res.send(user);
   });
 
   app.post("/api/login", async (req, res) => {
     const { body } = req;
-    const users = await Users.find({});
-    const user = users.find((item) => item.personGmail === body.email);
+    const user = await Users.findOne({ personGmail: body.email });
 
     if (!user || user.personPassword !== body.password) {
       return res.send({ isLogged: false });
@@ -58,40 +52,29 @@ const usersRouter = (app) => {
   });
 
   app.post("/api/favorite", async (req, res) => {
-    const { userId, carId } = req;
-    const users = await Users.find({});
-    const user = users.find((item) => item.favorites === body.favorites);
-
-    const isAlreadyExists = user.favorites.some(
-      (item) => item === Number(carId)
-    );
+    const { userId, carId } = req.body;
+    const user = await Users.findOne({ id: userId });
+    const isAlreadyExists = user.favorites.some(item => item === carId)
 
     if (isAlreadyExists) {
-      user.favorites = user.favorites.filter((item) => item !== Number(carId));
+      user.favorites = user.favorites.filter((item) => item !== carId);
     } else {
-      user.favorites.push(Number(carId));
+      user.favorites.push(carId);
     }
-    const newUsers = users.map((item) => {
-      if (item.id === Number(userId)) {
-        return user;
-      } else {
-        return item;
-      }
-    });
-    modifyUsers(newUsers);
+    await Users.updateOne({ id: userId }, { favorites: user.favorites });
+
     res.send(user);
   });
 
   app.get("/api/user/favorites", async (req, res) => {
-    const { userId } = req;
-    const users = await Users.find({});
-    const user = users.find((item) => item.id === Number(body.id));
+    const { userId } = req.query;
+    const user = await Users.findOne({ id: userId });
 
     if (user.favorites.length === 0) {
       return res.send([]);
     }
 
-    const cars = readCars();
+    const cars = await Cars.find({});
     const userCars = cars.filter((car) => user.favorites.includes(car.id));
 
     return res.send(userCars);
