@@ -1,22 +1,22 @@
-const { uuid } = require('../helpers');
-const Users = require('../models/User');
-
-// Users.find
-// Users.findOne
-// Users.updateOne
+const { uuid, readUsers } = require("../helpers");
+const Users = require("../models/User");
 
 const usersRouter = (app) => {
   app.get("/api/users", async (req, res) => {
-    const users = await Users.find({ }); // find return []
+    const users = await Users.find({});
 
     return res.send(users);
   });
 
   app.post("/api/users", async (req, res) => {
     const { body } = req;
-    const userAlreadyExist = await Users.findOne({ personGmail: body.personGmail}); // returns {}
+    const users = await Users.find({});
 
-    if (userAlreadyExist) {
+    const alreadyExist = users.find(
+      (item) => item.personGmail === body.personGmail
+    );
+
+    if (alreadyExist) {
       return res.status(404).end();
     }
     // It should also have a validation.
@@ -27,19 +27,22 @@ const usersRouter = (app) => {
       personPhone: body.personPhone,
       personGmail: body.personGmail,
       personPassword: body.personPassword,
-      role: 'User', //TODO It is not ok to save ppassword un-encrypted
+      role: "User", //TODO It is not ok to save ppassword un-encrypted
     });
     await user.save();
+    // WE should check if there is such user or not.
+    // writeUser(user);
 
     return res.send(user);
   });
 
   app.post("/api/login", async (req, res) => {
     const { body } = req;
-    const user = await Users.findOne({ personGmail: body.email});
+    const users = await Users.find({});
+    const user = users.find((item) => item.personGmail === body.email);
 
     if (!user || user.personPassword !== body.password) {
-      return res.status(404).end();
+      return res.send({ isLogged: false });
     }
 
     return res.send({
@@ -50,39 +53,49 @@ const usersRouter = (app) => {
       email: user.personGmail,
       id: user.id,
       role: user.role,
-      favorites: user.favorites
+      favorites: user.favorites,
     });
   });
 
-  app.post('/api/favorite', async (req, res) => {
-    const { userId, carId } = req.body;
+  app.post("/api/favorite", async (req, res) => {
+    const { userId, carId } = req;
+    const users = await Users.find({});
+    const user = users.find((item) => item.favorites === body.favorites);
 
-    const user = await Users.findOne({ id: userId });
-    const isAlreadyExists = user.favorites.some(item => item === carId)
+    const isAlreadyExists = user.favorites.some(
+      (item) => item === Number(carId)
+    );
 
-    if(isAlreadyExists) {
-      user.favorites = user.favorites.filter(item => item !== carId)
+    if (isAlreadyExists) {
+      user.favorites = user.favorites.filter((item) => item !== Number(carId));
     } else {
-      user.favorites.push(carId);
+      user.favorites.push(Number(carId));
     }
-    await Users.updateOne({ id: userId },  { favorites: user.favorites });
-
+    const newUsers = users.map((item) => {
+      if (item.id === Number(userId)) {
+        return user;
+      } else {
+        return item;
+      }
+    });
+    modifyUsers(newUsers);
     res.send(user);
-  })
+  });
 
-  app.get('/api/user/favorites', async (req, res) => {
-    const { userId } = req.query;
-    const user = await Users.findOne({ id: userId });
+  app.get("/api/user/favorites", async (req, res) => {
+    const { userId } = req;
+    const users = await Users.find({});
+    const user = users.find((item) => item.id === Number(body.id));
 
-    if(user.favorites.length === 0){
+    if (user.favorites.length === 0) {
       return res.send([]);
     }
 
     const cars = readCars();
-    const userCars = cars.filter(car => user.favorites.includes(car.id))
+    const userCars = cars.filter((car) => user.favorites.includes(car.id));
 
     return res.send(userCars);
-  })
+  });
 };
 
-module.exports = { usersRouter };
+module.exports = { usersRouter, readUsers };
