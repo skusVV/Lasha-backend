@@ -74,6 +74,7 @@ const usersRouter = (app) => {
       return res.send([]);
     }
 
+    // TODO write $in query.
     const cars = await Cars.find({});
     const userCars = cars.filter((car) => user.favorites.includes(car.id));
 

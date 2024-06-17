@@ -5,6 +5,10 @@ const Users = require('../models/User');
 const mapCarWithFavorites = (car, userFavorits) => {
   return { ...car._doc, favorite: userFavorits.includes(car.id) };
 };
+// There are 3 ways how to pass info to backned:
+//  req.query --- api/v1/test?someQuery=anything
+//  req.body  --- when request has body. POST, PUT request
+//  req.params --- "/api/cars/:id" - on server; on ui-  "/api/cars/11"
 
 const carsRouter = (app) => {
 
@@ -25,30 +29,29 @@ const carsRouter = (app) => {
     return res.send(response);
   });
 
-  // app.get("/api/cars/:id", (req, res) => {
-  //   const { userId } = req.query;
-  //   const cars = readCars();
-  //   const users = readUsers();
-  //   const user = users.find((item) => item.id === Number(userId));
-  //   const response = cars.find((item) => item.id === Number(req.params.id));
-  //   // const res = mapCarWithFavorites(response, user.favorites);
+  app.get("/api/cars/:id", async (req, res) => {
+    const { userId } = req.query;
+    const { id } = req.params;
+    const user = await Users.findOne({ id: userId });
+    const response = await Cars.findOne({ id: id })
+
+    return res.send(mapCarWithFavorites(response, user.favorites));
+  });
   //
-  //   return res.send(mapCarWithFavorites(response, user.favorites));
-  // });
-  //
-  // app.get("/api/cars", (req, res) => {
-  //   const { userId } = req.query;
-  //   const user = users.readUsers().find((user) => user.id === Number(userId));
-  //   const cars = readCars();
-  //
-  //   if (user.role === "Admin") {
-  //     return res.send(cars);
-  //   } else {
-  //     // USER
-  //     return res.send(cars.filter((car) => car.userId === user.id));
-  //   }
-  // });
-  //
+  app.get("/api/cars", async (req, res) => {
+    const { userId } = req.query;
+    const user = await Users.findOne({ id: userId });
+
+    if (user.role === "Admin") {
+      const cars = await Cars.find({ });
+      return res.send(cars);
+    } else {
+      const cars = await Cars.find({ userId: userId });
+
+      return res.send(cars);
+    }
+  });
+
   app.post("/api/cars", async (req, res) => {
     const { body } = req;
     const { userId } = req.query;
@@ -81,48 +84,39 @@ const carsRouter = (app) => {
 
     return res.send(car);
   });
-  //
-  // app.patch("/api/cars/:id", (req, res) => {
-  //   const { body, params } = req;
-  //   const { userId } = req.query;
-  //
-  //   const updatedCar = {
-  //     id: Number(params.id),
-  //     userId: Number(userId),
-  //     description: body.description,
-  //     img: body.imageRef,
-  //     type: body.type,
-  //     location: body.location,
-  //     year: body.year,
-  //     madeBy: body.carModel,
-  //     model: body.model,
-  //     price: body.price,
-  //     fuelType: body.fuel,
-  //     milage: body.millage,
-  //     transmition: body.transmition,
-  //     labels: body.labels.split(","),
-  //     exterior: body.exterior,
-  //     liters: body.liters,
-  //     doors: body.doors,
-  //     wheel: body.wheel,
-  //     interiorColor: body.interiorColor,
-  //     techInspection: body.techInspection,
-  //     accidents: body.accidents,
-  //   };
-  //   const cars = readCars();
-  //
-  //   const newCars = cars.map((item) => {
-  //     if (item.id !== updatedCar.id) {
-  //       return item;
-  //     } else {
-  //       return updatedCar;
-  //     }
-  //   });
-  //
-  //   writeCars(newCars);
-  //
-  //   return res.send(newCars);
-  // });
+
+  app.patch("/api/cars/:id", async (req, res) => {
+    const { body, params } = req;
+    const { userId } = req.query;
+
+    const updatedCar = {
+      description: body.description,
+      img: body.imageRef,
+      type: body.type,
+      location: body.location,
+      year: body.year,
+      madeBy: body.carModel,
+      model: body.model,
+      price: body.price,
+      fuelType: body.fuel,
+      milage: body.millage,
+      transmition: body.transmition,
+      labels: body.labels.split(","),
+      exterior: body.exterior,
+      liters: body.liters,
+      doors: body.doors,
+      wheel: body.wheel,
+      interiorColor: body.interiorColor,
+      techInspection: body.techInspection,
+      accidents: body.accidents,
+    };
+
+    await Cars.updateOne({ id: params.id }, {
+      ...updatedCar
+    });
+
+    return res.send({...updatedCar, id: params.id });
+  });
   //
   // app.delete("/api/cars/:id", (req, res) => {
   //   const { params } = req;
