@@ -1,4 +1,4 @@
-const { uuid, readUsers } = require("../helpers");
+const { uuid } = require("../helpers");
 const Users = require("../models/User");
 const Cars = require("../models/Car");
 
@@ -82,4 +82,4 @@ const usersRouter = (app) => {
   });
 };
 
-module.exports = { usersRouter, readUsers };
+module.exports = { usersRouter };
