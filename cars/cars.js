@@ -1,6 +1,6 @@
 const { uuid } = require("../helpers");
-const Cars = require('../models/Car');
-const Users = require('../models/User');
+const Cars = require("../models/Car");
+const Users = require("../models/User");
 
 const mapCarWithFavorites = (car, userFavorits) => {
   return { ...car._doc, favorite: userFavorits.includes(car.id) };
@@ -11,7 +11,6 @@ const mapCarWithFavorites = (car, userFavorits) => {
 //  req.params --- "/api/cars/:id" - on server; on ui-  "/api/cars/11"
 
 const carsRouter = (app) => {
-
   app.get("/api/cars-test", async (req, res) => {
     const cars = await Cars.find({});
     return res.send(cars);
@@ -33,7 +32,7 @@ const carsRouter = (app) => {
     const { userId } = req.query;
     const { id } = req.params;
     const user = await Users.findOne({ id: userId });
-    const response = await Cars.findOne({ id: id })
+    const response = await Cars.findOne({ id: id });
 
     return res.send(mapCarWithFavorites(response, user.favorites));
   });
@@ -43,7 +42,7 @@ const carsRouter = (app) => {
     const user = await Users.findOne({ id: userId });
 
     if (user.role === "Admin") {
-      const cars = await Cars.find({ });
+      const cars = await Cars.find({});
       return res.send(cars);
     } else {
       const cars = await Cars.find({ userId: userId });
@@ -111,88 +110,78 @@ const carsRouter = (app) => {
       accidents: body.accidents,
     };
 
-    await Cars.updateOne({ id: params.id }, {
-      ...updatedCar
-    });
+    await Cars.updateOne(
+      { id: params.id },
+      {
+        ...updatedCar,
+      }
+    );
 
-    return res.send({...updatedCar, id: params.id });
+    return res.send({ ...updatedCar, id: params.id });
   });
-  //
-  // app.delete("/api/cars/:id", (req, res) => {
-  //   const { params } = req;
-  //   const carId = Number(params.id);
-  //   const cars = readCars();
-  //   const newCars = cars.filter((car) => {
-  //     if (car.id === carId) {
-  //       return false;
-  //     } else {
-  //       return true;
-  //     }
-  //   });
-  //
-  //   writeCars(newCars);
-  //
-  //   return res.send({});
-  // });
-  //
-  // app.get("/api/search", (req, res) => {
-  //   const filter = req.query;
-  //   const { userId } = req.query;
-  //   const users = readUsers();
-  //   const user = users.find((item) => item.id === Number(userId));
-  //
-  //   let newCars = readCars();
-  //   // console.log('car', newCars)
-  //   if (filter.term) {
-  //     newCars = newCars.filter(
-  //       (car) =>
-  //         car.madeBy.toLowerCase().includes(filter.term.toLowerCase()) ||
-  //         car.model.toLowerCase().includes(filter.term.toLowerCase()) ||
-  //         car.fuelType.toLowerCase().includes(filter.term.toLowerCase()) ||
-  //         car.location.toUpperCase().includes(filter.term.toUpperCase()) ||
-  //         car.labels.some((label) =>
-  //           label.toLowerCase().includes(filter.term.toLowerCase())
-  //         )
-  //     );
-  //   }
-  //
-  //   if (filter.model) {
-  //     newCars = newCars
-  //       .filter(
-  //         (car) =>
-  //           car.madeBy.toLowerCase() === filter.model.toLowerCase() ||
-  //           filter.model === "---"
-  //       )
-  //       .filter(
-  //         (car) =>
-  //           (car.price > filter.minPrice && car.price < filter.maxPrice) ||
-  //           filter.maxPrice === "null"
-  //       )
-  //       .filter(
-  //         (car) => car.year === Number(filter.year) || filter.year === "null"
-  //       )
-  //       .filter(
-  //         (car) =>
-  //           car.location === filter.location || filter.location === "Anywhere"
-  //       );
-  //   }
-  //
-  //   return res.send(newCars.map(item => mapCarWithFavorites(item, user.favorites)));
-  // });
-  //
-  // app.get("/api/favorites", (res) => {
-  //   const { userId } = req.query;
-  //   const user = users.readUsers().find((user) => user.id === Number(userId));
-  //   let favoriteCars = readCars();
-  //
-  //   if (filter.term) {
-  //     favoriteCars = favoriteCars.filter((car) =>
-  //       user.favorites.includes(car.id)
-  //     );
-  //   }
-  //   console.log("cheese");
-  //   return res.send(favoriteCars);
-  // });
+
+  app.delete("/api/cars/:id", async (req, res) => {
+    const { id } = req.params;
+
+    await Cars.deleteOne({ id: id });
+
+    return res.send({});
+  });
+
+  app.get("/api/search", async (req, res) => {
+    const filter = req.query;
+    const { userId } = req.query;
+    const user = await Users.findOne({ id: userId });
+
+    let cars = await Cars.find({});
+
+    if (filter.term) {
+      cars = cars.filter(
+        (car) =>
+          car.madeBy.toLowerCase().includes(filter.term.toLowerCase()) ||
+          car.model.toLowerCase().includes(filter.term.toLowerCase()) ||
+          car.fuelType.toLowerCase().includes(filter.term.toLowerCase()) ||
+          car.location.toUpperCase().includes(filter.term.toUpperCase()) ||
+          car.labels.some((label) =>
+            label.toLowerCase().includes(filter.term.toLowerCase())
+          )
+      );
+    }
+
+    if (filter.model) {
+      cars = cars
+        .filter(
+          (car) =>
+            car.madeBy.toLowerCase() === filter.model.toLowerCase() ||
+            filter.model === "---"
+        )
+        .filter(
+          (car) =>
+            (car.price > filter.minPrice && car.price < filter.maxPrice) ||
+            filter.maxPrice === "null"
+        )
+        .filter(
+          (car) => car.year === Number(filter.year) || filter.year === "null"
+        )
+        .filter(
+          (car) =>
+            car.location === filter.location || filter.location === "Anywhere"
+        );
+    }
+
+    return res.send(
+      cars.map((item) => mapCarWithFavorites(item, user.favorites))
+    );
+  });
+
+  app.get("/api/favorites", async (req, res) => {
+    const { userId } = req.query;
+    const user = await Users.findOne({ id: userId });
+
+    const favoriteCars = await Cars.find({ id: { $in: user.favorites } });
+
+    return res.send(favoriteCars);
+  });
 };
 
 module.exports = { carsRouter };
