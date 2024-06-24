@@ -62,7 +62,7 @@ const carAttributesRouter = (app) => {
 
     return res.send(attributes);
   });
-  //
+
   // app.delete("/api/car-attributes/manufacturer/:id", (req, res) => {
   //   const attributeId = req.params.id;
   //   const attributes = readCarAttributes();

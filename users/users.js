@@ -1,6 +1,13 @@
+
 const { uuid } = require("../helpers");
+const bcrypt = require('bcrypt');
 const Users = require("../models/User");
 const Cars = require("../models/Car");
+
+// await bcrypt.hash(password, saltRounds)
+// await bcrypt.compare(password, hashedPassword);
+// "dasa" => "dsfkgblkjtrhiowv5yn398c5mmu2598m98utx9"
+// "hey" <= "dsfkgblkjtrhiowv5yn398c5mmu2598m98utx9"
 
 const usersRouter = (app) => {
   app.get("/api/users", async (req, res) => {
@@ -16,14 +23,15 @@ const usersRouter = (app) => {
     if (alreadyExist) {
       return res.status(404).end();
     }
-    // It should also have a validation.
+    const passwordHash = await bcrypt.hash(body.personPassword, 12);
+
     const user = new Users({
       id: uuid(),
       personName: body.personName,
       personSurname: body.personSurname,
       personPhone: body.personPhone,
       personGmail: body.personGmail,
-      personPassword: body.personPassword,
+      personPassword: passwordHash,
       role: "User", //TODO It is not ok to save ppassword un-encrypted
     });
     await user.save();
@@ -34,9 +42,10 @@ const usersRouter = (app) => {
   app.post("/api/login", async (req, res) => {
     const { body } = req;
     const user = await Users.findOne({ personGmail: body.email });
+    const isValidPassword = await bcrypt.compare(body.password, user.personPassword);
 
-    if (!user || user.personPassword !== body.password) {
-      return res.send({ isLogged: false });
+    if (!user || !isValidPassword) {
+      return res.status(404).send();
     }
 
     return res.send({
