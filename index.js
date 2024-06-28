@@ -1,8 +1,8 @@
 const express = require("express");
 const cors = require("cors");
-const { readFileSync, writeFile } = require("fs");
 const { carsRouter } = require('./cars/cars');
 const {usersRouter} = require('./users/users');
+const { chatRouter} = require('./chat/chat');
 const { carAttributesRouter } = require('./car-attributes/car-attributes');
 const mongoose = require("mongoose");
 
@@ -27,7 +27,7 @@ app.get("/api/test", (req, res) => {
 carsRouter(app);
 usersRouter(app);
 carAttributesRouter(app);
-
+chatRouter(app);
 
 app.listen(3001, () => {
   console.log("Server started on the port 3001");
