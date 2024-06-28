@@ -38,11 +38,12 @@ const CarAttribute = require("../models/CarAttribute");
 const carAttributesRouter = (app) => {
   app.get("/api/car-attributes/:attributeType", async (req, res) => {
     const { attributeType } = req.params;
-    const attributes = await CarAttribute.find({ attributeType: attributeType });
+    const attributes = await CarAttribute.find({
+      attributeType: attributeType,
+    });
 
     res.send(attributes);
   });
-
 
   app.post("/api/car-attributes/:attributeType", async (req, res) => {
     const { value, madeByKey } = req.body;
@@ -54,84 +55,70 @@ const carAttributesRouter = (app) => {
       name: value,
       selected: false,
       attributeType: attributeType,
-      madeByKey: madeByKey ? madeByKey : null
+      madeByKey: madeByKey ? madeByKey : null,
     });
 
     await carAttribute.save();
-    const attributes = await CarAttribute.find({ attributeType: attributeType });
+    const attributes = await CarAttribute.find({
+      attributeType: attributeType,
+    });
 
     return res.send(attributes);
   });
 
-  // app.delete("/api/car-attributes/manufacturer/:id", (req, res) => {
-  //   const attributeId = req.params.id;
-  //   const attributes = readCarAttributes();
-  //
-  //   const newAttributes = {
-  //     ...attributes,
-  //     manufacturer: attributes["manufacturer"].filter(
-  //       (item) => item.id !== attributeId
-  //     ),
-  //   };
-  //   writeAttributes(newAttributes, res);
-  //   return res.send(newAttributes["manufacturer"]);
-  // });
-  //
-  // ///////////////////////////////////////////////////////////////////
+  app.delete("/api/car-attributes/manufacturer/:id", async (req, res) => {
+    const attributeId = req.params.id;
+    try {
+      await CarAttribute.findByIdAndDelete(attributeId);
+      const attributes = await CarAttribute.find({
+        attributeType: "manufacturer",
+      });
+      res.send(attributes);
+    } catch (err) {
+      console.error(err);
+      res.status(500).send("Server Error");
+    }
+  });
 
-  //
-  // app.delete("/api/car-attributes/carModel/:id", (req, res) => {
-  //   const attributeId = req.params.id;
-  //   const attributes = readCarAttributes();
-  //
-  //   const newAttributes = {
-  //     ...attributes,
-  //     carModel: attributes["carModel"].filter(
-  //       (item) => item.id !== attributeId
-  //     ),
-  //   };
-  //   writeAttributes(newAttributes);
-  //
-  //   return res.send(newAttributes["carModel"]);
-  // });
-  //
-  // /////////////////////////////////////////////////////////
+  app.delete("/api/car-attributes/carModel/:id", async (req, res) => {
+    const attributeId = req.params.id;
+    try {
+      await CarAttribute.findByIdAndDelete(attributeId);
+      const attributes = await CarAttribute.find({ attributeType: "carModel" });
+      res.send(attributes);
+    } catch (err) {
+      console.error(err);
+      res.status(500).send("Server Error");
+    }
+  });
 
-  //
-  // app.delete("/api/car-attributes/engine-capacity/:id", (req, res) => {
-  //   const { body } = req;
-  //   const attributeId = req.params.id;
-  //   const attributes = readCarAttributes();
-  //
-  //   const newAttributes = {
-  //     ...attributes,
-  //     "engine-capacity": attributes["engine-capacity"].filter(
-  //       (item) => item.id !== attributeId
-  //     ),
-  //   };
-  //   writeAttributes(newAttributes);
-  //
-  //   return res.send(newAttributes["engine-capacity"]);
-  // });
-  //
-  // /////////////////////////////////////////////////////////////////
+  app.delete("/api/car-attributes/engine-capacity/:id", async (req, res) => {
+    const attributeId = req.params.id;
+    try {
+      await CarAttribute.findByIdAndDelete(attributeId);
+      const attributes = await CarAttribute.find({
+        attributeType: "engine-capacity",
+      });
+      res.send(attributes);
+    } catch (err) {
+      console.error(err);
+      res.status(500).send("Server Error");
+    }
+  });
 
-  //
-  // app.delete("/api/car-attributes/locations/:id", (req, res) => {
-  //   const { body } = req;
-  //   const attributeId = req.params.id;
-  //   const attributes = readCarAttributes();
-  //
-  //   const newAttributes = {
-  //     ...attributes,
-  //     locations: attributes["locations"].filter(
-  //       (item) => item.id !== attributeId
-  //     ),
-  //   };
-  //   writeAttributes(newAttributes);
-  //
-  //   return res.send(newAttributes["locations"]);
-  // });
+  app.delete("/api/car-attributes/locations/:id", async (req, res) => {
+    const attributeId = req.params.id;
+    try {
+      await CarAttribute.findByIdAndDelete(attributeId);
+      const attributes = await CarAttribute.find({
+        attributeType: "locations",
+      });
+      res.send(attributes);
+    } catch (err) {
+      console.error(err);
+      res.status(500).send("Server Error");
+    }
+  });
 };
 
 module.exports = { carAttributesRouter };
