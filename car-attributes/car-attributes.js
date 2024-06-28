@@ -40,7 +40,7 @@ const carAttributesRouter = (app) => {
     const { attributeType } = req.params;
     const attributes = await CarAttribute.find({
       attributeType: attributeType,
-    });
+    }, { _id: 0 });
 
     res.send(attributes);
   });
@@ -66,12 +66,13 @@ const carAttributesRouter = (app) => {
     return res.send(attributes);
   });
 
-  app.delete("/api/car-attributes/manufacturer/:id", async (req, res) => {
+  app.delete("/api/car-attributes/:attributeType/:id", async (req, res) => {
     const attributeId = req.params.id;
+    const attributeType = req.params.attributeType;
     try {
-      await CarAttribute.findByIdAndDelete(attributeId);
+      await CarAttribute.findOneAndDelete({ id: attributeId });
       const attributes = await CarAttribute.find({
-        attributeType: "manufacturer",
+        attributeType: attributeType,
       });
       res.send(attributes);
     } catch (err) {
@@ -80,45 +81,6 @@ const carAttributesRouter = (app) => {
     }
   });
 
-  app.delete("/api/car-attributes/carModel/:id", async (req, res) => {
-    const attributeId = req.params.id;
-    try {
-      await CarAttribute.findByIdAndDelete(attributeId);
-      const attributes = await CarAttribute.find({ attributeType: "carModel" });
-      res.send(attributes);
-    } catch (err) {
-      console.error(err);
-      res.status(500).send("Server Error");
-    }
-  });
-
-  app.delete("/api/car-attributes/engine-capacity/:id", async (req, res) => {
-    const attributeId = req.params.id;
-    try {
-      await CarAttribute.findByIdAndDelete(attributeId);
-      const attributes = await CarAttribute.find({
-        attributeType: "engine-capacity",
-      });
-      res.send(attributes);
-    } catch (err) {
-      console.error(err);
-      res.status(500).send("Server Error");
-    }
-  });
-
-  app.delete("/api/car-attributes/locations/:id", async (req, res) => {
-    const attributeId = req.params.id;
-    try {
-      await CarAttribute.findByIdAndDelete(attributeId);
-      const attributes = await CarAttribute.find({
-        attributeType: "locations",
-      });
-      res.send(attributes);
-    } catch (err) {
-      console.error(err);
-      res.status(500).send("Server Error");
-    }
-  });
 };
 
 module.exports = { carAttributesRouter };
