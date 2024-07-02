@@ -1,39 +1,50 @@
 const { uuid } = require("../helpers");
 const Chat = require("../models/Chat");
 const User = require("../models/User");
+const Message = require("../models/Message");
 
 // TODO 1
 const mapChatParticipants = async (chat, userId) => {
+    // console.log('char', chat)
+  console.log('dawdaw')
   // you should get participants;
   // Find participant that not equal to userId
   // go to user table and get this user name "name"
   const participantIds = chat.participants.filter((id) => id !== userId);
+  console.log(1)
   const participants = await User.find(
-    { _id: { $in: participantIds } },
-    "name"
+    { id: { $in: participantIds } },
+      { personName: 1,  personSurname: 1, _id: 0}
   );
+  console.log(2)
   return {
-    ...chat,
-    participants: participants.map((p) => p.name),
+    id: chat.id,
+    participants: chat.participants,
+    name: participants.map((p) => `${p.personName} ${p.personSurname}`).join(', '),
   };
 };
 
 const chatRouter = (app) => {
   app.get("/api/chats", async (req, res) => {
     const { userId } = req.query;
+    // if(!userId) {
+    //   return res.send([]);
+    // }
     // TODO 2 we select all chats, but we
-    // need to select only the chat if userId includes in the field participants. Hint: play around $in
     const chats = await Chat.find({
       participants: { $in: [userId] },
-    });
-
+    }, { _id: 0});
+  // console.log('dawdawdaw', chats)
+  //   if(chats.length === 0) {
+  //     return res.send([]);
+  //   }
     const response = await Promise.all(
-      chats.map((chat) => mapChatParticipants(chat, userId))
+      chats.map((chat) => mapChatParticipants(chat._doc, userId))
     );
     res.send(response);
-    res.send(response.map((item) => mapChatParticipants(item, userId)));
   });
 
+  // TODO test it later
   app.post("/api/chats", async (req, res) => {
     const { userId } = req.query; // TODO 3 we need to pass it from UI
     const chat = new Chat({
@@ -44,7 +55,7 @@ const chatRouter = (app) => {
     await chat.save();
     //
     // All chats related to users;
-    res.send(mapChatParticipants(chat, userId));
+    res.send(mapChatParticipants(chat._doc, userId));
   });
 
   app.delete("/api/chats", async (req, res) => {
@@ -54,11 +65,28 @@ const chatRouter = (app) => {
 
   app.get("/api/messages/:chatId", async (req, res) => {
     const { chatId } = req.params;
-    // All chats related to users;
+
+    const messages = await Message.find({ chatId });
+
+    res.send(messages);
   });
 
   app.post("/api/messages/:chatId", async (req, res) => {
     const { chatId } = req.params;
+    const { userId } = req.query;
+    const { content } = req.body;
+
+    const message = new Message({
+      id: uuid(),
+      content,
+      createdAt: Date.now(),
+      authorId: userId,
+      chatId
+    });
+
+    await message.save();
+
+    res.send(message);
     // All chats related to users;
   });
 
