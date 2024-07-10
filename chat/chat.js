@@ -5,14 +5,12 @@ const Message = require("../models/Message");
 
 // TODO 1
 const mapChatParticipants = async (chat, userId) => {
-  console.log("dawdaw");
   const participantIds = chat.participants.filter((id) => id !== userId);
-  console.log(1);
   const participants = await User.find(
     { id: { $in: participantIds } },
     { personName: 1, personSurname: 1, _id: 0 }
   );
-  console.log(2);
+
   return {
     id: chat.id,
     participants: chat.participants,
@@ -25,27 +23,19 @@ const mapChatParticipants = async (chat, userId) => {
 const chatRouter = (app) => {
   app.get("/api/chats", async (req, res) => {
     const { userId } = req.query;
-    // if(!userId) {
-    //   return res.send([]);
-    // }
-    // TODO 2 we select all chats, but we
     const chats = await Chat.find(
       {
         participants: { $in: [userId] },
       },
       { _id: 0 }
     );
-    // console.log('dawdawdaw', chats)
-    //   if(chats.length === 0) {
-    //     return res.send([]);
-    //   }
     const response = await Promise.all(
       chats.map((chat) => mapChatParticipants(chat._doc, userId))
     );
     res.send(response);
   });
 
-  // TODO test it later
+
   app.post("/api/chats", async (req, res) => {
     const { userId } = req.query; // TODO 3 we need to pass it from UI
     const chat = new Chat({
@@ -54,14 +44,19 @@ const chatRouter = (app) => {
     });
 
     await chat.save();
-    //
-    // All chats related to users;
-    res.send(mapChatParticipants(chat._doc, userId));
+    // console.log('chat._doc', chat._doc)
+    const response = await mapChatParticipants(chat._doc, userId)
+
+    res.send(response);
   });
 
-  app.delete("/api/chats", async (req, res) => {
-    const { userId } = req.query;
-    // All chats related to users;
+  app.delete("/api/chats/:chatId", async (req, res) => {
+    const { chatId } = req.params;
+
+    await Chat.deleteOne({ id: chatId });
+    await Message.deleteMany({ chatId: chatId });
+
+    res.send(null);
   });
 
   app.get("/api/messages/:chatId", async (req, res) => {
@@ -83,6 +78,7 @@ const chatRouter = (app) => {
       createdAt: Date.now(),
       authorId: userId,
       chatId,
+      isDeleted: false,
     });
 
     await message.save();
@@ -91,27 +87,32 @@ const chatRouter = (app) => {
     // All chats related to users;
   });
 
-  app.delete("/api/messages/:chatId", async (req, res) => {
-    const { chatId } = req.params;
-    // All chats related to users;
-  });
-
-  app.patch("/api/messages/:chatId", async (req, res) => {
-    const { chatId } = req.params;
-    // All chats related to users;
-  });
-
-  app.patch("/api/messages/:chatId/:messageId", async (req, res) => {
-    const { chatId, messageId } = req.params;
+  app.patch("/api/messages/:messageId", async (req, res) => {
+    const { messageId } = req.params;
     const { content } = req.body;
+    // const { userId } = req.query;
+    // Double-check that you are an author of the message.
 
     const updatedMessage = await Message.findOneAndUpdate(
-      { chatId, id: messageId },
+      { id: messageId },
       { content },
       { new: true }
     );
 
     res.send(updatedMessage);
+  });
+
+  app.delete("/api/messages/:messageId", async (req, res) => {
+    const { messageId } = req.params;
+    // const { content } = req.body;
+
+    await Message.findOneAndUpdate(
+        { id: messageId },
+        { isDeleted: true },
+        { new: true }
+    );
+
+    res.send(null);
   });
 };
 
