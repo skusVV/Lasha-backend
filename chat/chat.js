@@ -5,22 +5,20 @@ const Message = require("../models/Message");
 
 // TODO 1
 const mapChatParticipants = async (chat, userId) => {
-    // console.log('char', chat)
-  console.log('dawdaw')
-  // you should get participants;
-  // Find participant that not equal to userId
-  // go to user table and get this user name "name"
+  console.log("dawdaw");
   const participantIds = chat.participants.filter((id) => id !== userId);
-  console.log(1)
+  console.log(1);
   const participants = await User.find(
     { id: { $in: participantIds } },
-      { personName: 1,  personSurname: 1, _id: 0}
+    { personName: 1, personSurname: 1, _id: 0 }
   );
-  console.log(2)
+  console.log(2);
   return {
     id: chat.id,
     participants: chat.participants,
-    name: participants.map((p) => `${p.personName} ${p.personSurname}`).join(', '),
+    name: participants
+      .map((p) => `${p.personName} ${p.personSurname}`)
+      .join(", "),
   };
 };
 
@@ -31,13 +29,16 @@ const chatRouter = (app) => {
     //   return res.send([]);
     // }
     // TODO 2 we select all chats, but we
-    const chats = await Chat.find({
-      participants: { $in: [userId] },
-    }, { _id: 0});
-  // console.log('dawdawdaw', chats)
-  //   if(chats.length === 0) {
-  //     return res.send([]);
-  //   }
+    const chats = await Chat.find(
+      {
+        participants: { $in: [userId] },
+      },
+      { _id: 0 }
+    );
+    // console.log('dawdawdaw', chats)
+    //   if(chats.length === 0) {
+    //     return res.send([]);
+    //   }
     const response = await Promise.all(
       chats.map((chat) => mapChatParticipants(chat._doc, userId))
     );
@@ -81,7 +82,7 @@ const chatRouter = (app) => {
       content,
       createdAt: Date.now(),
       authorId: userId,
-      chatId
+      chatId,
     });
 
     await message.save();
@@ -98,6 +99,19 @@ const chatRouter = (app) => {
   app.patch("/api/messages/:chatId", async (req, res) => {
     const { chatId } = req.params;
     // All chats related to users;
+  });
+
+  app.patch("/api/messages/:chatId/:messageId", async (req, res) => {
+    const { chatId, messageId } = req.params;
+    const { content } = req.body;
+
+    const updatedMessage = await Message.findOneAndUpdate(
+      { chatId, id: messageId },
+      { content },
+      { new: true }
+    );
+
+    res.send(updatedMessage);
   });
 };
 
