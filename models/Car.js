@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { carStatuses } = require('../constants/constants');
 
 const carSchema = new mongoose.Schema({
     id: { type: String, required: true },
@@ -21,8 +22,10 @@ const carSchema = new mongoose.Schema({
     doors:  { type: String },
     wheel:  { type: String },
     interiorColor:  { type: String },
+    interiorMaterial:  { type: String },
     techInspection:  { type: String },
     accidents:  { type: String },
+    status:  { type: String, required: true, default: carStatuses.Draft },
 });
 
 module.exports = mongoose.model('Cars', carSchema);

@@ -1,9 +1,10 @@
 const { uuid } = require("../helpers");
 const Cars = require("../models/Car");
 const Users = require("../models/User");
+const { carStatuses } = require('../constants/constants');
 
 const mapCarWithFavorites = (car, userFavorits) => {
-  return { ...car._doc, favorite: userFavorits.includes(car.id) };
+  return { ...car, favorite: userFavorits.includes(car.id) };
 };
 // There are 3 ways how to pass info to backned:
 //  req.query --- api/v1/test?someQuery=anything
@@ -17,12 +18,14 @@ const carsRouter = (app) => {
   });
 
   app.get("/api/random-cars", async (req, res) => {
-    const cars = await Cars.find({}).limit(5);
+    const cars = await Cars.aggregate([
+        { $match : { status: carStatuses.Published }},
+        { $sample: { size: 5 } }
+    ]);
     const { userId } = req.query;
     const user = await Users.findOne({ id: userId });
 
     const response = cars
-      .sort(() => Math.random() - Math.random())
       .map((item) => mapCarWithFavorites(item, user?.favorites || []));
 
     return res.send(response);
@@ -32,9 +35,11 @@ const carsRouter = (app) => {
     const { userId } = req.query;
     const { id } = req.params;
     const user = await Users.findOne({ id: userId });
-    const response = await Cars.findOne({ id: id });
+    const response = await Cars.findOne({ id: id, status: carStatuses.Published });
 
-    return res.send(mapCarWithFavorites(response, user.favorites));
+    if(!response) return res.send(null);
+
+    return res.send(mapCarWithFavorites(response._doc, user.favorites));
   });
   //
   app.get("/api/cars", async (req, res) => {
@@ -75,8 +80,10 @@ const carsRouter = (app) => {
       doors: body.doors,
       wheel: body.wheel,
       interiorColor: body.interiorColor,
+      interiorMaterial: body.interiorMaterial,
       techInspection: body.techInspection,
       accidents: body.accidents,
+      status: body.status
     });
 
     await car.save();
@@ -106,8 +113,10 @@ const carsRouter = (app) => {
       doors: body.doors,
       wheel: body.wheel,
       interiorColor: body.interiorColor,
+      interiorMaterial: body.interiorMaterial,
       techInspection: body.techInspection,
       accidents: body.accidents,
+      status: body.status
     };
 
     await Cars.updateOne(
@@ -170,7 +179,7 @@ const carsRouter = (app) => {
     }
 
     return res.send(
-      cars.map((item) => mapCarWithFavorites(item, user.favorites))
+      cars.map((item) => mapCarWithFavorites(item._doc, user.favorites))
     );
   });
 
