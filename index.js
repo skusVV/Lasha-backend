@@ -3,6 +3,7 @@ const cors = require("cors");
 const { carsRouter } = require('./cars/cars');
 const {usersRouter} = require('./users/users');
 const { chatRouter} = require('./chat/chat');
+const { vinRouter} = require('./vin-check/vin');
 const { carAttributesRouter } = require('./car-attributes/car-attributes');
 const mongoose = require("mongoose");
 
@@ -28,6 +29,7 @@ carsRouter(app);
 usersRouter(app);
 carAttributesRouter(app);
 chatRouter(app);
+vinRouter(app)
 
 app.listen(3001, () => {
   console.log("Server started on the port 3001");
