@@ -3,6 +3,42 @@ const Cars = require("../models/Car");
 const Users = require("../models/User");
 const { carStatuses } = require('../constants/constants');
 
+async function getPriceDescription(car) {
+
+  const cars = await Cars.find(
+      {
+        madeBy: car.madeBy,
+        model: car.model,
+        year: car.year,
+        accidents: car.accidents,
+        // millage: in range of [millage - 20%, millage+ 20%]
+        // liters
+        // fuelType
+        id: {$ne: car.id}
+      },
+      {_id: 0, price: 1, id: 1}
+  );
+
+  const prices = cars.map(item => item.price);
+  const totalPrices = prices.reduce((acc, cur) =>{
+    return acc + cur
+  }, 0);
+  const avgPrice = totalPrices / prices.length;
+  const normalPriceLow = avgPrice * 0.9;
+  const normalHigh = avgPrice * 1.1;
+  console.log(`${normalPriceLow} < ${avgPrice} < ${normalHigh}`)
+
+  if(car.price < normalPriceLow) {
+    return 'Low';
+  }
+
+  if(car.price > normalHigh) {
+    return 'High';
+  }
+
+  return 'Fair'
+}
+
 const mapCarWithFavorites = (car, userFavorits) => {
   return { ...car, favorite: userFavorits.includes(car.id) };
 };
@@ -35,11 +71,12 @@ const carsRouter = (app) => {
     const { userId } = req.query;
     const { id } = req.params;
     const user = await Users.findOne({ id: userId });
-    const response = await Cars.findOne({ id: id, status: carStatuses.Published });
 
+    const response = await Cars.findOne({ id: id, status: carStatuses.Published });
+    const priceDescription = await getPriceDescription(response._doc);
     if(!response) return res.send(null);
 
-    return res.send(mapCarWithFavorites(response._doc, user.favorites));
+    return res.send(mapCarWithFavorites({...response._doc, priceDescription}, user.favorites));
   });
   //
   app.get("/api/cars", async (req, res) => {
